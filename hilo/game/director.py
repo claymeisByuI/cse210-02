@@ -39,6 +39,7 @@ class Director:
             self.do_updates()
             self.do_outputs()
             self.get_play_again_inputs()
+        print("Thanks for playing HILO!")
             
     def do_show_card(self):
         """Draws a card and shows it to the user.
