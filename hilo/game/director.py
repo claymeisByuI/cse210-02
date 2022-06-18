@@ -1,5 +1,5 @@
-from hilo.game.deck import Deck
-from hilo.game.card import Card
+from game.deck import Deck
+from game.card import Card
 
 class Director:
     """A person who directs the game. 
@@ -19,14 +19,13 @@ class Director:
         Args:
             self (Director): an instance of Director.
         """
-        self.deck = Deck(13, ["Hearts", "Diamonds", "Clubs", "Spades"])
+        self.deck = Deck(13, ["♥️", "♦️", "♣️", "♠️"])
         self.is_playing = True
-        self.score = 0
-        self.total_score = 0
+        self.score = 300
+        self.previous_card = None
+        self.active_card = None
+        self.guess_higher = True
 
-        for i in range(5):
-            die = Die()
-            self.dice.append(die)
 
     def start_game(self):
         """Starts the game by running the main game loop.
@@ -35,18 +34,43 @@ class Director:
             self (Director): an instance of Director.
         """
         while self.is_playing:
+            self.do_show_card()
             self.get_inputs()
             self.do_updates()
             self.do_outputs()
+            self.get_play_again_inputs()
+            
+    def do_show_card(self):
+        """Draws a card and shows it to the user.
+            
+            Args:
+                self (Director): an instance of Director.
+        """
+        # if first rownd of play, deal a card
+        if self.active_card is None:
+            self.active_card = self.deck.deal_card()
+        print(f"The current card is {self.active_card}")
 
     def get_inputs(self):
+        """Ask the user if think next card is higher or lower.
+
+        Args:
+            self (Director): An instance of Director.
+        """
+        higher_lower = input("Higher or lower? [H/L] ").lower()
+        self.guess_higher = (higher_lower == "h")
+       
+
+    def get_play_again_inputs(self):
         """Ask the user if they want to roll.
 
         Args:
             self (Director): An instance of Director.
         """
-        roll_dice = input("Roll dice? [y/n] ")
-        self.is_playing = (roll_dice == "y")
+        if not self.is_playing:
+            return 
+        draw_again = input("Play again? [y/n] ").lower()
+        self.is_playing = (draw_again == "y")
        
     def do_updates(self):
         """Updates the player's score.
@@ -56,12 +80,18 @@ class Director:
         """
         if not self.is_playing:
             return 
-
-        for i in range(len(self.dice)):
-            die = self.dice[i]
-            die.roll()
-            self.score += die.points 
-        self.total_score += self.score
+        self.previous_card = self.deck.active_card
+        self.active_card = self.deck.deal_card()
+        if self.guess_higher:
+            if self.active_card.number > self.previous_card.number:
+                self.score += 100
+            else:
+                self.score -= 75
+        else:
+            if self.active_card.number < self.previous_card.number:
+                self.score += 100
+            else:
+                self.score -= 75
 
     def do_outputs(self):
         """Displays the dice and the score. Also asks the player if they want to roll again. 
@@ -71,12 +101,7 @@ class Director:
         """
         if not self.is_playing:
             return
-        
-        values = ""
-        for i in range(len(self.dice)):
-            die = self.dice[i]
-            values += f"{die.value} "
 
-        print(f"You rolled: {values}")
-        print(f"Your score is: {self.total_score}\n")
+        print(f"Next card was: {self.active_card}")
+        print(f"Your score is: {self.score}\n")
         self.is_playing == (self.score > 0)
